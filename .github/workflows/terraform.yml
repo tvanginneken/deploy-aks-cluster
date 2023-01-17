@@ -1,0 +1,77 @@
+name: 'Terraform'
+
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+
+jobs:
+  terraform:
+    name: 'Terraform'
+    runs-on: ubuntu-latest
+    env:
+      ARM_CLIENT_ID: ${{secrets.ARM_CLIENT_ID}}
+      ARM_CLIENT_SECRET: ${{secrets.ARM_CLIENT_SECRET}}
+      ARM_SUBSCRIPTION_ID: ${{secrets.ARM_SUBSCRIPTION_ID}}
+      ARM_TENANT_ID: ${{secrets.ARM_TENANT_ID}}
+
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v2
+    
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: Terraform Init
+      run: terraform init
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # Checks that all Terraform configuration files adhere to a canonical format
+    - name: Terraform Format
+      run: terraform fmt -check
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # Generates an execution plan for Terraform
+    - name: Terraform Plan
+      run: terraform plan
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # On push to main, build or change infrastructure according to Terraform configuration files
+    # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
+    - name: Terraform Apply
+      if: github.ref == 'refs/heads/main-not' && github.event_name == 'push'
+      run: terraform apply -auto-approve
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # - name: Run YOR action
+    #   uses: bridgecrewio/yor-action@main
+
+    # - name: Run Bridgecrew 
+    #   id: Bridgecrew
+    #   uses: bridgecrewio/bridgecrew-action@master
+    #   with:
+    #     api-key: ${{ secrets.BRIDGECREW_API_KEY }}
